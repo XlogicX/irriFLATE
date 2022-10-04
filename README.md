@@ -20,8 +20,10 @@ Speaking of the symbol table, you can enter the command 'tables' at the Token pr
 ## Usage Screenshot(s):
 ![alt tag](https://github.com/XlogicX/irriFLATE/blob/main/irriflate01.png?raw=true)
 
-
 ![alt tag](https://github.com/XlogicX/irriFLATE/blob/main/irriflate02.png?raw=true)
+
+![alt tag](https://github.com/XlogicX/irriFLATE/blob/main/dynamic.png?raw=true)
+![alt tag](https://github.com/XlogicX/irriFLATE/blob/main/php.png?raw=true)
 
 ## Examples
 Long Nothing (Single Block Dynamic Mode):<br>
