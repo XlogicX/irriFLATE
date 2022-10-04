@@ -13,7 +13,7 @@ An interactive tool that allows you to craft compressed data (loosely) based on 
 
 Note that the output is ASCII-Hex, as it is a binary format and this is a good representation of binary data
 
-In Fixed and Dynaimic Huffman modes, you can enter length-distance pairs in the format of l,d. So Length of 3 and distance of 4 could be written 3,4. You can also enter the direct binary of the token from the huffman table if that's your think.
+In Fixed and Dynaimic Huffman modes, you can enter length-distance pairs in the format of l,d. So Length of 3 and distance of 4 could be written 3,4. You can also enter the direct binary of the token from the huffman table if that's your thing.
 
 Speaking of the symbol table, you can enter the command 'tables' at the Token prompt to see the available tokens and their bit patterns
 
