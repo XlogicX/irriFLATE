@@ -1,5 +1,12 @@
 # irriFLATE
-Impractically Redundant Redundant Interactive DEFLATE crafting tool
+the Impractically Redundant Redundant Interactive DEFLATE crafting tool #
+
+usage: irriFLATE [-h] [--errors] [--colors]
+
+optional arguments:<br>
+  -h, --help  show this help message and exit<br>
+  --errors    Allow Huffman table error conditions<br>
+  --colors    Color code similar to infgen fork<br>
 
 ## Descirption
 An interactive tool that allows you to craft compressed data (loosely) based on RFC1951. This tool allows for multiblock compressed data of stored, fixed, and dynamic modes. Dynamic mode being the most complex; of which you get to manually specify each field (counts, code length code table, symbol table, etc...). It is stated that this 'loosely' follows RFC1951 because though you can craft data that an INFLATEr should be able to parse, you can create data that no DEFLATE tool would craft. You can also create error conditions as well. You can craft custom 'huffman' (nonprefix) tables for all kinds of designer compression scenarios.
