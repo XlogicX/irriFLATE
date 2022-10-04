@@ -18,11 +18,15 @@ In Fixed and Dynaimic Huffman modes, you can enter length-distance pairs in the 
 Speaking of the symbol table, you can enter the command 'tables' at the Token prompt to see the available tokens and their bit patterns
 
 ## Usage Screenshot(s):
+### Fixed Mode
 ![alt tag](https://github.com/XlogicX/irriFLATE/blob/main/irriflate01.png?raw=true)
 
+### Stored Mode
 ![alt tag](https://github.com/XlogicX/irriFLATE/blob/main/irriflate02.png?raw=true)
 
+### Dynamic Mode
 ![alt tag](https://github.com/XlogicX/irriFLATE/blob/main/dynamic.png?raw=true)
+### Decompressing that result using phpcli
 ![alt tag](https://github.com/XlogicX/irriFLATE/blob/main/php.png?raw=true)
 
 ## Examples
