@@ -11,6 +11,8 @@ optional arguments:<br>
 ## Descirption
 An interactive tool that allows you to craft compressed data (loosely) based on RFC1951. This tool allows for multiblock compressed data of stored, fixed, and dynamic modes. Dynamic mode being the most complex; of which you get to manually specify each field (counts, code length code table, symbol table, etc...). It is stated that this 'loosely' follows RFC1951 because though you can craft data that an INFLATEr should be able to parse, you can create data that no DEFLATE tool would craft. You can also create error conditions as well. You can craft custom 'huffman' (nonprefix) tables for all kinds of designer compression scenarios.
 
+Note that the output is ASCII-Hex, as it is a binary format and this is a good representation of binary data
+
 ## Usage Screenshot(s):
 ![alt tag](https://github.com/XlogicX/irriFLATE/blob/main/irriflate01.png?raw=true)
 
