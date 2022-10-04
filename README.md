@@ -20,7 +20,7 @@ Note that the output is ASCII-Hex, as it is a binary format and this is a good r
 ![alt tag](https://github.com/XlogicX/irriFLATE/blob/main/irriflate02.png?raw=true)
 
 ## Examples
-Long Nothing:<br>
+Long Nothing (Single Block Dynamic Mode):<br>
 edfd013cd7f8ffc7013c1e8fc7e3f1783c1e8fc7e3f1783c1e8fc7e3f1783c1e8fc7e3f1787cbfdfeff7fbfd7ebfdfeff7fbfd7ebfdfeff7fbfd7ebfdfeff7fbfd7ebfdfeff7fbfd7ebfdfeff7fbfd7ebfdfeff7fbfd7ebfdfeff7fbfd7ebfdfeff7fbfd7ebfdfeff7fbfd7ebfdfeff7fbfd7ebfdfeff7fbfd7ebfdfeff7fbfd7ebfdfeff7fbfd7ebfdfeff7fbfd7ebfdfeff7fb7d3c1e8fc7e3f1783c1e8fc7e3f1783c1e8fc7e3f1783c1e8fc7e3f1783c1e8fc7e3f1783c1e8fc7e3f1783c1e8fc7e3f1783c1e8fc7e3f1783c1e8fc7e3f1783c1e8fc7e3f1783c1e8fc7e3f1783c1e8fc7e3f1787c1f8fc7e3f1783c1e8fc7e3f1783c1e8fc7e3f1783c1e8fc7e3f17c3e9f8fc7e3f1783c1e8fc7e3f1783c1e8fc7e3f1783c1e8fc71f
 
 invalid deflate data -- code lengths code is incomplete<br>
