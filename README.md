@@ -1,5 +1,5 @@
 # irriFLATE
-the Impractically Redundant Redundant Interactive DEFLATE crafting tool #
+the Impractically Redundant Redundant Interactive DEFLATE crafting tool
 
 usage: irriFLATE [-h] [--errors] [--colors]
 
