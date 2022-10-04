@@ -14,6 +14,9 @@ An interactive tool that allows you to craft compressed data (loosely) based on 
 ## Usage Screenshot(s):
 ![alt tag](https://github.com/XlogicX/irriFLATE/blob/main/irriflate01.png?raw=true)
 
+
+![alt tag](https://github.com/XlogicX/irriFLATE/blob/main/irriflate02.png?raw=true)
+
 ## Examples
 Long Nothing:<br>
 edfd013cd7f8ffc7013c1e8fc7e3f1783c1e8fc7e3f1783c1e8fc7e3f1783c1e8fc7e3f1787cbfdfeff7fbfd7ebfdfeff7fbfd7ebfdfeff7fbfd7ebfdfeff7fbfd7ebfdfeff7fbfd7ebfdfeff7fbfd7ebfdfeff7fbfd7ebfdfeff7fbfd7ebfdfeff7fbfd7ebfdfeff7fbfd7ebfdfeff7fbfd7ebfdfeff7fbfd7ebfdfeff7fbfd7ebfdfeff7fbfd7ebfdfeff7fbfd7ebfdfeff7fb7d3c1e8fc7e3f1783c1e8fc7e3f1783c1e8fc7e3f1783c1e8fc7e3f1783c1e8fc7e3f1783c1e8fc7e3f1783c1e8fc7e3f1783c1e8fc7e3f1783c1e8fc7e3f1783c1e8fc7e3f1783c1e8fc7e3f1783c1e8fc7e3f1787c1f8fc7e3f1783c1e8fc7e3f1783c1e8fc7e3f1783c1e8fc7e3f17c3e9f8fc7e3f1783c1e8fc7e3f1783c1e8fc7e3f1783c1e8fc71f
