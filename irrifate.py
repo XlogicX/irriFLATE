@@ -151,7 +151,10 @@ def symbolize(table,symbol,disthuff):
 			if int(length) < i:
 				break
 		if disthuff == 0:	# Fixed mode
-			lengthdist.append(int_to_binarray(idx,7)[::-1]) # This is the Length
+			if idx < 24:
+				lengthdist.append(int_to_binarray(idx,7)[::-1]) # This is the Length
+			else:
+				lengthdist.append(int_to_binarray(idx+168,8)[::-1]) # This is the Length				
 		else:				# Dynamic mode
 			symbol = 256+idx
 			try:
