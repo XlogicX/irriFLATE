@@ -2,6 +2,8 @@
 
 import re	# There's no way I'm writing a script without being able to use RegEx
 import argparse
+import binascii
+import zlib
 
 class gziplen:
 	def __init__(self):
@@ -53,8 +55,10 @@ class databuffer:
 		if args.colors: print('\033[0;37m',end='')
 		if end:
 			print(hexstring)
+			return(hexstring)
 		else:
 			print(hexstring,end='')
+			return(hexstring)
 
 class nonprefix:
 	'Structure for non-prefix codes, supposed to be huffman, but flexible...'
@@ -119,6 +123,8 @@ def flatten(arr,fields):
 	return arr
 
 def int_to_binarray(number,w):
+	# Takes an Integer and returns an array of bits that correspond to that integer
+	# zero padded padded with the argument 'w'
 	bitarray = []
 	binary = '{num:0{width}b}'.format(num=number, width=w)
 	for bit in binary:
@@ -829,19 +835,118 @@ def getgzlen():
 		getgzlen()					
 	return (gzlen)
 
-def getgzcrc():
+def adler32sum():
 	gzcrc = ''
-	while not re.match(r'^(0x[a-f0-9]{8}|\d+)$', gzcrc, re.I):
-		gzcrc = input("Enter 4 byte CRC value (Acceptable Format examples: 4294967295 or 0xFFFFFFFF): ")
+	if args.file:
+		f = open(args.file, 'rb')
+		filedata = f.read()
+		gzcrc = hex(zlib.adler32(filedata))
+	else:
+		while not re.match(r'^(0x[a-f0-9]{8}|\d+)$', gzcrc, re.I):
+			gzcrc = input("Enter 4 byte CRC value (Acceptable Format examples: 4294967295 or 0xFFFFFFFF): ")
 	if gzcrc.startswith('0x'):
-		gzcrc = gzcrc[8:10] + gzcrc[6:8] + gzcrc[4:6] + gzcrc[2:4]
+		gzcrc = gzcrc[2:].zfill(8)
 	elif int(gzcrc) < 4294967296:
 		gzcrc = '{:08x}'.format(int(gzcrc))
 		gzcrc = gzcrc[6:8] + gzcrc[4:6] + gzcrc[2:4] + gzcrc[0:2]
 	else:
 		print('Wrong Format')
-		getgzlen()					
+		getgzlen()	
 	return (gzcrc)
+
+#-----------------------------#
+#      PNG MetaData Entry     #
+#-----------------------------#
+
+def getdimension(type):
+	bitarray1,bitarray2,bitarray3,bitarray4 = [],[],[],[]
+	dim = ''
+	while not re.match(r'^\d+$', dim, re.I):
+		dim = input("Enter integer for {} (4,294,967,295 max): ".format(type))
+	if int(dim) < 4294967296:
+		dim = '{:08x}'.format(int(dim))
+		dim1,dim2,dim3,dim4 = chr(int(dim[0:2],16)),chr(int(dim[2:4],16)),chr(int(dim[4:6],16)),chr(int(dim[6:8],16))
+	else:
+		print('Wrong Format')
+		gettime()
+	dim1 = '{num:0{width}b}'.format(num=ord(dim1), width=8)
+	dim2 = '{num:0{width}b}'.format(num=ord(dim2), width=8)
+	dim3 = '{num:0{width}b}'.format(num=ord(dim3), width=8)
+	dim4 = '{num:0{width}b}'.format(num=ord(dim4), width=8)			
+	# Make them arrays of 8-bits
+	for bit in dim1:
+		bitarray1.append(int(bit))
+	for bit in dim2:
+		bitarray2.append(int(bit))
+	for bit in dim3:
+		bitarray3.append(int(bit))
+	for bit in dim4:
+		bitarray4.append(int(bit))						
+	return (bitarray1,bitarray2,bitarray3,bitarray4)
+
+def crc32sum(bytez):
+	# I feel like I need to refactor this nonsense with the adler32sum() into one function;
+	# there's just a lot of unessesary code repetition. Also confusing how sometimes this
+	# returns a bit array or just asciitext (it's the context it's called in that defiens it)
+	asciibytes = ''
+
+	# If in Gzip mode
+	if args.gzip:
+		if args.file:
+			f = open(args.file, 'rb')
+			filedata = f.read()
+			asciibytes = hex(binascii.crc32(filedata))
+		else:
+			while not re.match(r'^(0x[a-f0-9]{8}|\d+)$', asciibytes, re.I):
+				asciibytes = input("Enter 4 byte CRC value (Acceptable Format examples: 4294967295 or 0xFFFFFFFF): ")
+		if asciibytes.startswith('0x'):
+			asciibytes = asciibytes[2:].zfill(8)
+		elif int(asciibytes) < 4294967296:
+			asciibytes = '{:08x}'.format(int(asciibytes))
+		else:
+			print('Wrong Format')
+			crc32sum(False)
+		asciibytes = asciibytes[6:8] + asciibytes[4:6] + asciibytes[2:4] + asciibytes[0:2]
+		return(asciibytes)
+
+	# Otherwise, compute it from value passed to function, and return bit arrays
+	else:
+		bitarray1,bitarray2,bitarray3,bitarray4 = [],[],[],[]
+
+		for bits in bytez:
+			hexstring = ''
+			for i in range(0,int(len(bits)/8)):
+				ordval = 0
+				for j in range(0,8):
+					ordval += bits[(i*8)+j] << (7-j)
+				hexstring += '{:02x}'.format(ordval)
+			if args.colors: print('\033[0;37m',end='')
+			asciibytes += hexstring
+	crc = hex(binascii.crc32(binascii.unhexlify(asciibytes)))[2:].zfill(8)
+	crc1,crc2,crc3,crc4 = chr(int(crc[0:2],16)),chr(int(crc[2:4],16)),chr(int(crc[4:6],16)),chr(int(crc[6:8],16))
+	crc1 = '{num:0{width}b}'.format(num=ord(crc1), width=8)
+	crc2 = '{num:0{width}b}'.format(num=ord(crc2), width=8)
+	crc3 = '{num:0{width}b}'.format(num=ord(crc3), width=8)
+	crc4 = '{num:0{width}b}'.format(num=ord(crc4), width=8)	
+	# Make them arrays of 8-bits
+	for bit in crc1:
+		bitarray1.append(int(bit))
+	for bit in crc2:
+		bitarray2.append(int(bit))
+	for bit in crc3:
+		bitarray3.append(int(bit))
+	for bit in crc4:
+		bitarray4.append(int(bit))			
+	return (bitarray1,bitarray2,bitarray3,bitarray4)
+
+def print_binarray(bins):
+	hexstring = ''
+	for byte in bins:
+		bits = ''
+		for bit in byte:
+			bits += str(bit)
+		hexstring += hex(int(bits, 2))[2:4].zfill(2)
+	print(hexstring,end='')
 
 #-------------------#
 # Compression Types #
@@ -946,11 +1051,17 @@ parser = argparse.ArgumentParser(prog='irriFLATE')
 parser.add_argument('--errors', help='Allow Huffman table error conditions', action="store_true")
 parser.add_argument('--colors', help='Color code similar to infgen fork', action="store_true")
 parser.add_argument('--gzip', help='Add gzip header nonsense', action="store_true")
+parser.add_argument('--png', help='Craft a fucked up image', action="store_true")
+parser.add_argument('--file', help='An uncompressed version of the data provided for AdlerCRC32 calculation', type=str)
 args = parser.parse_args()
 
 blocks = databuffer()
 glen = gziplen()
 data = []					# Unprocessed list form of data
+
+if args.gzip and args.png:
+	print("Can't do both gzip and png arguments")
+	quit()
 
 if args.gzip:
 	magic1 = [0,0,0,1,1,1,1,1]
@@ -961,6 +1072,85 @@ if args.gzip:
 	xfl =    [0,0,0,0,0,0,0,0]	# No Extra Flags
 	os = getOS()
 	data.append([magic1,magic2,method,flag,time1,time2,time3,time4,xfl,os])
+
+if args.png:
+	# https://github.com/corkami/pics/blob/master/binary/PNG.png is rad BTW
+	magic1 = int_to_binarray(ord('\x89'),8)
+	data.append(magic1)
+	magic2 = int_to_binarray(ord('P'),8)
+	data.append(magic2)
+	magic3 = int_to_binarray(ord('N'),8)
+	data.append(magic3)	
+	magic4 = int_to_binarray(ord('G'),8)
+	data.append(magic4)	
+	magic5 = int_to_binarray(13,8)
+	data.append(magic5)	
+	magic6 = int_to_binarray(10,8)
+	data.append(magic6)	
+	magic7 = int_to_binarray(ord('\x1a'),8)	
+	data.append(magic7)	
+	magic8 = int_to_binarray(10,8)
+	data.append(magic8)	
+	# Length field set to fixed size of 13 for very specific Chunk Data
+	length1 = int_to_binarray(0,8)
+	data.append(length1)	
+	length2 = int_to_binarray(0,8)
+	data.append(length2)
+	length3 = int_to_binarray(0,8)
+	data.append(length3)	
+	length4 = int_to_binarray(13,8)
+	data.append(length4)
+	# Type field, set to IHDR
+	type1 = int_to_binarray(ord('I'),8)
+	data.append(type1)
+	type2 = int_to_binarray(ord('H'),8)
+	data.append(type2)	
+	type3 = int_to_binarray(ord('D'),8)
+	data.append(type3)
+	type4 = int_to_binarray(ord('R'),8)
+	data.append(type4)
+	width1, width2, width3, width4 = getdimension('width')
+	data.append(width1)
+	data.append(width2)
+	data.append(width3)
+	data.append(width4)
+	height1, height2, height3, height4 = getdimension('height')
+	data.append(height1)
+	data.append(height2)
+	data.append(height3)
+	data.append(height4)	
+	bpp = int_to_binarray(8,8) # 8 Bytes Per control Pixel
+	data.append(bpp)
+	colortype = int_to_binarray(2,8) # RGB color type
+	data.append(colortype)
+	comp = int_to_binarray(ord('\x00'),8) # Compression type set to DEFLATE, duh
+	data.append(comp)
+	filt = int_to_binarray(ord('\x00'),8) # None
+	data.append(filt)
+	interlace = int_to_binarray(ord('\x00'),8) # None
+	data.append(interlace)
+	ihdr_crc32 = crc32sum([type1,type2,type3,type4,width1,width2,width3,width4,height1,height2,height3,height4,bpp,colortype,
+		comp,filt,interlace])
+	for field in ihdr_crc32:
+		data.append(field)
+	ilength = getdimension('IDAT length') # Entails Size/Method to end of AdlerCRC32?
+	for field in ilength:
+		data.append(field)
+
+	idat1 = int_to_binarray(ord('I'),8)
+	data.append(idat1)
+	idat2 = int_to_binarray(ord('D'),8)
+	data.append(idat2)	
+	idat3 = int_to_binarray(ord('A'),8)
+	data.append(idat3)
+	idat4 = int_to_binarray(ord('T'),8)
+	data.append(idat4)
+
+	size_method = int_to_binarray(ord('\x18'),8) # Size/Method
+	data.append(size_method)		
+	level = int_to_binarray(ord('\x19'),8) # Level/Dict
+	data.append(level)		
+	data = [data]
 
 last = [[0]]				# Init 'last?' block
 while (last == [[0]]):		# So long as we have more blocks, keep processing
@@ -976,9 +1166,24 @@ while (last == [[0]]):		# So long as we have more blocks, keep processing
 	else: print("Invalid")
 
 if args.colors: print('\033[0;37m',end='')
+
 if args.gzip:
 	getgzlen()
-	crc = getgzcrc()
+	crc = crc32sum(False)
+
+if args.png:
+	crc = adler32sum()
+
 print("\nFinal Result:")
-blocks.print(data,False)
+datastream = blocks.print(data,False)
+
 if args.gzip: print(crc + glen.gethexr())
+if args.png:
+	print(crc,end='')
+	lastcheck = [binascii.a2b_hex(datastream[74:] + crc)[i:i+1] for i in range(len(binascii.a2b_hex(datastream[74:] + crc)))]
+	lastcheckarray = []
+	for char in lastcheck:
+		lastcheckarray.append(int_to_binarray(ord(char),8))
+	idatcrc1, idatcrc2, idatcrc3, idatcrc4 = crc32sum(lastcheckarray)
+	print_binarray([idatcrc1, idatcrc2, idatcrc3, idatcrc4])
+	print('0000000049454e44ae426082') # IEND: 0 length + IEND + Known CRC
