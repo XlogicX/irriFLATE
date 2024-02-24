@@ -1,0 +1,17 @@
+dm: 3: 3 pixels horizontal
+dm: 1: 1 pixel vertical
+dm: 21: IDAT table 21 bytes long
+lb: 1: Last Block
+ct: 0: Stored Mode
+tb: 10: 10 Bytes 
+lt: 0x00: Filter = None
+lt: 0xFF
+lt: 0x00
+lt: 0x00: Red
+lt: 0x00
+lt: 0xFF
+lt: 0x00: Green
+lt: 0x00
+lt: 0x00
+lt: 0xFF: Blue
+ck: 0x0efb02fe: CRC32 for this image data
