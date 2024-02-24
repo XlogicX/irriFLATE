@@ -18,6 +18,20 @@ class gziplen:
 		hexval = '{:08x}'.format(int(self.data))
 		return(hexval[6:8] + hexval[4:6] + hexval[2:4] + hexval[0:2])		
 
+class recipe():
+	def __init__(self):
+		self.instructions = []
+		with open(args.recipe,"r") as rec:
+			for instruction in rec:
+				self.instructions.append(instruction.strip())
+	def pop(self):
+		return(self.instructions.pop(0))
+	def read(self):
+		if self.instructions:
+			return(self.instructions[0])
+		else:
+			return('Nothing')
+
 class databuffer:
 	'Full buffer of data that will eventually be processed and printed out'
 
@@ -70,6 +84,11 @@ class nonprefix:
 		self.alphabet = alphabet
 		self.bitlengths = bitlengths
 
+		# Edge case for huffman table for empty distance table...this could be a bad idea,
+		# but it fixes more than it breaks
+		if not bitlengths:
+			self.bitlengths = [1]
+
 	def construct(self):
 		# Construction based on algorithm from RFC 1951
 		self.table = {}
@@ -109,6 +128,19 @@ class nonprefix:
 		for idx,i in enumerate(tree):
 			code = '{num:0{width}b}'.format(num=i,width=self.bitlengths[idx])
 			self.table[self.alphabet[idx]] = code
+
+def commandread(message,caller):
+	if args.recipe:
+		# If the calling function command type is the same as the next line in the recipe
+		if auto_rec.read().lower().startswith(caller):
+			print(message,auto_rec.read().split(':')[1].strip())
+			return(auto_rec.pop().split(':')[1].strip())
+		# Otherwise, get the command from the user
+		else:
+			command = input(message)		
+	else:
+		command = input(message)
+	return(command)
 
 # Flatten to 2d
 def getbinarray(bits):
@@ -258,7 +290,7 @@ def getlit(i):
 	bitarray = []
 	lit = ''
 	while not re.match(r'^(0x[a-f0-9]{2}|0b[01]{8}|.)$', lit, re.I):
-		lit = input("Enter Literal #{} (Acceptable Format examples: X, 0x58, 0b01011000): ".format(i+1))
+		lit = commandread("Enter Literal #{} (Acceptable Format examples: X, 0x58, 0b01011000): ".format(i+1),'lt')
 	if lit.startswith('0x'):
 		lit = chr(int(lit[2:4],16))
 	elif lit.startswith('0b'):
@@ -273,7 +305,7 @@ def getsymbol(table):
 	# Get token in many formats, but return ordinal/int value that represents it.
 	# A full l,d pair will be an exception
 	while True:
-		token = input("Token: ")
+		token = commandread("Token: ",'tk')
 		# Check to see if it's a literal character
 		if re.match(r'^.$', token, re.I):
 			glen.grow(1)
@@ -333,20 +365,20 @@ def getextra(bitlength):
 	example = '1010101010101'
 	bits = ''
 	while not (re.match(r'^0b[01]+$', bits, re.I) and len(bits) == (bitlength+2)):
-		bits = input("Enter {} Extra Bits (Acceptable Format Example: 0b{}): ".format(bitlength, example[0:bitlength]))
+		bits = commandread("Enter {} Extra Bits (Acceptable Format Example: 0b{}): ".format(bitlength, example[0:bitlength]),'eb')
 	return(bits[2:bitlength+2])
 
 def getdist(disthuff):
 	bits = ''
 	while True:
 		if disthuff == 0:
-			bits = input("Enter 5 Distance Bits (Acceptable Format Example: 0b00000-0b11101): ")
+			bits = commandread("Enter 5 Distance Bits (Acceptable Format Example: 0b00000-0b11101): ",'db')
 			if re.match(r'^0b[01]{5}$', bits, re.I):
 				value = int(bits[2:7],2)
 				if (value >= 0 and value < 29):
 					return(bits[2:7],value)
 		else:
-			bits = input("Enter Distance Bits (prefix with 0b): ")
+			bits = commandread("Enter Distance Bits (prefix with 0b): ",'db')
 			if re.match(r'^0b[01]+$', bits, re.I):
 				value = bits[2:]
 				if value in disthuff.values():
@@ -358,7 +390,7 @@ def getcode(i):
 	bitarray = []
 	number = ''
 	while not re.match(r'^0b[01]{3}|[0-7]|l$', number, re.I):
-		number = input("Enter 3-bit Code for Symbol #{} (Acceptable input examples: 6, 0b110): ".format(i))
+		number = commandread("Enter 3-bit Code for Symbol #{} (Acceptable input examples: 6, 0b110): ".format(i),'cs')
 	if number.startswith('0b'):
 		number = int(number[2:5],2)
 	lit = '{num:0{width}b}'.format(num=int(number), width=3)
@@ -412,7 +444,7 @@ def getdatacode(codehuff,bitlengths,symbol,total,exceeded,valid_lengths):
 	# From valid user input, we will have both an integer and binary code representation
 	int_code,bin_code = '',''
 	while True:
-		val = input("Enter value for symbol {} ({}) from Codes Table (prefix binary with 0b): ".format(symbol,symbol_meaning))
+		val = commandread("Enter value for symbol {} ({}) from Codes Table (prefix binary with 0b): ".format(symbol,symbol_meaning),'hv')
 		if val == 'repeat' or val == 'rep':
 			val = '16'
 		if val == 'somezeros':
@@ -456,7 +488,7 @@ def getdatacode(codehuff,bitlengths,symbol,total,exceeded,valid_lengths):
 
 		# While we don't have the right format or range
 		while not (re.match(r'^(0b[01]{2}|\d+)$', str(val), re.I) and val > -1 and val < 4):
-			val = input("How many of the next symbols will be 0 (3-{}) (if binary input it's 2-bit prefixed with 0b): ".format(left))
+			val = commandread("How many of the next symbols will be 0 (3-{}) (if binary input it's 2-bit prefixed with 0b): ".format(left),'rv')
 			if val.startswith('0b'):
 				bits = val[2:]
 				val = int(bits,2)
@@ -486,7 +518,7 @@ def getdatacode(codehuff,bitlengths,symbol,total,exceeded,valid_lengths):
 
 		# While we don't have the right format or range
 		while not (re.match(r'^(0b[01]{3}|\d+)$', str(val), re.I) and val > -1 and val < 8):
-			val = input("How many of the next symbols will be 0 (3-{}) (if binary input it's 3-bit prefixed with 0b): ".format(left))
+			val = commandread("How many of the next symbols will be 0 (3-{}) (if binary input it's 3-bit prefixed with 0b): ".format(left),'zv')
 			if val.startswith('0b'):
 				bits = val[2:]
 				val = int(bits,2)
@@ -516,7 +548,7 @@ def getdatacode(codehuff,bitlengths,symbol,total,exceeded,valid_lengths):
 
 		# While we don't have the right format or range
 		while not (re.match(r'^(0b[01]{7}|\d+)$', str(val), re.I) and val > -1 and val < 128):
-			val = input("How many of the next symbols will be 0 (11-{}) (if binary input it's 7-bit prefixed with 0b): ".format(left))
+			val = commandread("How many of the next symbols will be 0 (11-{}) (if binary input it's 7-bit prefixed with 0b): ".format(left),'zv')
 			if val.startswith('0b'):
 				bits = val[2:]
 				val = int(bits,2)
@@ -543,13 +575,13 @@ def getdatacode(codehuff,bitlengths,symbol,total,exceeded,valid_lengths):
 def getlast():
 	last = '2'
 	while (last != '0' and last != '1'):
-		last = input("First/Last Block (0-1): ")
+		last = commandread("First/Last Block (0-1): ",'lb')
 	return [[int(last)]]
 
 def gettype():
 	ftype = ''
 	while not re.match(r'^([0-3]|0b[01]{2})$', ftype, re.I):
-		ftype = input("Compression type (0-3 or 0b00-0b11): ")
+		ftype = commandread("Compression type (0-3 or 0b00-0b11): ",'ct')
 	if ftype.startswith('0b'):
 		ftype = int(ftype[2:4],2)
 	return([int_to_binarray(int(ftype),2)])
@@ -557,7 +589,7 @@ def gettype():
 def getlengths():
 	lbytes = -1
 	while (lbytes < 0 or lbytes > 65535):
-		lbytes = int(input("Total Bytes in Block (0-65535): "))
+		lbytes = int(commandread("Total Bytes in Block (0-65535): ",'tb'))
 	length = int_to_binarray(lbytes,16)
 	nlength = []
 	[nlength.append(1-i) for i in length]
@@ -568,7 +600,7 @@ def getcounts(data):
 	subdata = list(data)
 	hlit = '0'
 	while not (re.match(r'^(\d{1,3}|0b[01]{5})$', hlit, re.I) and int(hlit) > 256 and int(hlit) < 287):
-		hlit = input("# of Literal/Length codes (257-286 or 0b00000-0b11101): ")
+		hlit = commandread("# of Literal/Length codes (257-286 or 0b00000-0b11101): ",'lc')
 		if re.match(r'^0b[01]{5}$', hlit, re.I):
 			hlit = str(int(hlit[2:7],2)+257)
 	lit = int(hlit)
@@ -580,7 +612,7 @@ def getcounts(data):
 	subdata = list(data)
 	hdist = '0'
 	while not (re.match(r'^(\d{1,2}|0b[01]{5})$', hdist, re.I) and int(hdist) > 0 and int(hdist) < 31):
-		hdist = input("# of Distance codes (1-30 or 0b00000-0b11110): ")
+		hdist = commandread("# of Distance codes (1-30 or 0b00000-0b11110): ",'dc')
 		if re.match(r'^0b[01]{5}$', hdist, re.I):
 			hdist = str(int(hdist[2:7],2)+1)
 	dist = int(hdist)
@@ -591,7 +623,7 @@ def getcounts(data):
 	if args.colors: print('\033[0;31m',end='')	# Red
 	hclen = '0'
 	while not (re.match(r'^(\d{1,2}|0b[01]{4})$', hclen, re.I) and int(hclen) > 3 and int(hclen) < 20):
-		hclen = input("# of Code Length codes (4-19 or 0b0000-1111): ")
+		hclen = commandread("# of Code Length codes (4-19 or 0b0000-1111): ",'cl')
 		if re.match(r'^0b[01]{4}$', hclen, re.I):
 			hclen = str(int(hclen[2:7],2)+4)
 	clen = int(hclen)
@@ -764,7 +796,7 @@ def gettime():
 	bitarray1,bitarray2,bitarray3,bitarray4 = [],[],[],[]
 	stamp = ''
 	while not re.match(r'^(0x[a-f0-9]{8}|\d+)$', stamp, re.I):
-		stamp = input("Enter 4 byte (Epoch) Timestamp (Acceptable Format examples: 0x4EBD02CF or 1321009871): ")
+		stamp = commandread("Enter 4 byte (Epoch) Timestamp (Acceptable Format examples: 0x4EBD02CF or 1321009871): ",'ts')
 	if stamp.startswith('0x'):
 		stamp1,stamp2,stamp3,stamp4 = chr(int(stamp[2:4],16)),chr(int(stamp[4:6],16)),chr(int(stamp[6:8],16)),chr(int(stamp[8:10],16))
 	elif int(stamp) < 4294967296:
@@ -807,7 +839,7 @@ def getOS():
 	print("\t12 - QDOS")
 	print("\t13 - Acorn RISCOS")	
 	while not re.match(r'^(0x[a-f0-9]{2}|\d+)$', operatingsystem, re.I):
-		operatingsystem = input("Enter Operating System (Acceptable Format examples: 0x03 or 3): ")
+		operatingsystem = commandread("Enter Operating System (Acceptable Format examples: 0x03 or 3): ",'os')
 	if operatingsystem.startswith('0x'):
 		operatingsystem = chr(int(operatingsystem[2:4],16))
 	elif int(operatingsystem) < 256:
@@ -825,7 +857,7 @@ def getOS():
 def getgzlen():
 	gzlen = ''
 	while not re.match(r'^(0x[a-f0-9]{8}|\d+)$', gzlen, re.I):
-		gzlen = input("Enter 4 byte length (Acceptable Format examples: {} or 0x{} (<---Suggested Value)): ".format(glen.getint(),glen.gethex()))
+		gzlen = commandread("Enter 4 byte length (Acceptable Format examples: {} or 0x{} (<---Suggested Value)): ".format(glen.getint(),glen.gethex()),'fl')
 	if gzlen.startswith('0x'):
 		gzlen = gzlen[8:10] + gzlen[6:8] + gzlen[4:6] + gzlen[2:4]
 	elif int(gzlen) < 4294967296:
@@ -843,7 +875,7 @@ def adler32sum():
 		gzcrc = hex(zlib.adler32(filedata))
 	else:
 		while not re.match(r'^(0x[a-f0-9]{8}|\d+)$', gzcrc, re.I):
-			gzcrc = input("Enter 4 byte CRC value (Acceptable Format examples: 4294967295 or 0xFFFFFFFF): ")
+			gzcrc = commandread("Enter 4 byte CRC value (Acceptable Format examples: 4294967295 or 0xFFFFFFFF): ",'ck')
 	if gzcrc.startswith('0x'):
 		gzcrc = gzcrc[2:].zfill(8)
 	elif int(gzcrc) < 4294967296:
@@ -862,7 +894,7 @@ def getdimension(type):
 	bitarray1,bitarray2,bitarray3,bitarray4 = [],[],[],[]
 	dim = ''
 	while not re.match(r'^\d+$', dim, re.I):
-		dim = input("Enter integer for {} (4,294,967,295 max): ".format(type))
+		dim = commandread("Enter integer for {} (4,294,967,295 max): ".format(type),'dm')
 	if int(dim) < 4294967296:
 		dim = '{:08x}'.format(int(dim))
 		dim1,dim2,dim3,dim4 = chr(int(dim[0:2],16)),chr(int(dim[2:4],16)),chr(int(dim[4:6],16)),chr(int(dim[6:8],16))
@@ -898,7 +930,7 @@ def crc32sum(bytez):
 			asciibytes = hex(binascii.crc32(filedata))
 		else:
 			while not re.match(r'^(0x[a-f0-9]{8}|\d+)$', asciibytes, re.I):
-				asciibytes = input("Enter 4 byte CRC value (Acceptable Format examples: 4294967295 or 0xFFFFFFFF): ")
+				asciibytes = commandread("Enter 4 byte CRC value (Acceptable Format examples: 4294967295 or 0xFFFFFFFF): ",'ck')
 		if asciibytes.startswith('0x'):
 			asciibytes = asciibytes[2:].zfill(8)
 		elif int(asciibytes) < 4294967296:
@@ -1053,11 +1085,15 @@ parser.add_argument('--colors', help='Color code similar to infgen fork', action
 parser.add_argument('--gzip', help='Add gzip header nonsense', action="store_true")
 parser.add_argument('--png', help='Craft a fucked up image', action="store_true")
 parser.add_argument('--file', help='An uncompressed version of the data provided for AdlerCRC32 calculation', type=str)
+parser.add_argument('--recipe', help='Recipe of instructions in non-interactive fassion...irrFlate?', type=str)
 args = parser.parse_args()
 
 blocks = databuffer()
 glen = gziplen()
 data = []					# Unprocessed list form of data
+
+if args.recipe:
+	auto_rec = recipe()
 
 if args.gzip and args.png:
 	print("Can't do both gzip and png arguments")
@@ -1154,7 +1190,6 @@ if args.png:
 
 last = [[0]]				# Init 'last?' block
 while (last == [[0]]):		# So long as we have more blocks, keep processing
-
 	if args.colors: print('\033[0;35m',end='')	# Purple
 	last = getlast()		# Is this the last block and what kind of compression?
 	if args.colors: print('\033[0;36m',end='')	# Cyan
