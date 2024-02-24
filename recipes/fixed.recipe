@@ -1,0 +1,7 @@
+lb: 1: Last Block
+ct: 1: Compression Type
+tk: A
+tk: B
+tk: C
+tk: 3,3: 3 more characters, find them 3 backwards
+tk: EOB: End of Block

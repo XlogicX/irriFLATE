@@ -1,0 +1,39 @@
+lb: 1: Last Block
+ct: 2: Dynamic Mode
+lc: 257: 257 Codes
+dc: 1
+cl: 16
+cs: 0
+cs: 0
+cs: 2: 2 bits for 18 code
+cs: 2: 2 bits for 0 code 
+cs: 0
+cs: 0
+cs: 0
+cs: 0
+cs: 0
+cs: 0
+cs: 0
+cs: 0
+cs: 0
+cs: 0
+cs: 0
+cs: 1: 1 bit for 2 code
+hv: 18: Code for lots of zeros
+zv: 65: 65 zeros
+hv: 2: A in 2 bits
+hv: 2: B in 2 bits
+hv: 2: C in 2 bits
+hv: 18: Lots more zeros
+zv: 138: 138, max zeros
+hv: 18: moar zeros
+zv: 50: 50 more
+hv: 2: 2 bits for EOB code
+hv: 0: No distances
+tk: A
+tk: B
+tk: C
+tk: A
+tk: B
+tk: C
+tk: EOB

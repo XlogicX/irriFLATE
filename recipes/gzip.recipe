@@ -1,0 +1,11 @@
+ts: 12345: stupid timestamp value
+os: 5: Atari!
+lb: 1: Last Block
+ct: 1: Compression Type
+tk: A
+tk: B
+tk: C
+tk: 3,3: 3 more characters, find them 3 backwards
+tk: EOB: End of Block
+fl: 6: File length of 6 characters
+ck: 0xca5e9682: This would be the accurate checksum if the raw file isn't provided
