@@ -85,4 +85,4 @@ ASCII printable compressed data:<br>
 ![alt tag](https://github.com/XlogicX/irriFLATE/blob/main/cyberchef.png?raw=true)
 
 Using the Code-Length-Code of 16 (repeat previous huffman bitlength 3-6 times) as the first Code Length Code (there would be no previous code to repeat):  
-
+![alt tag](https://github.com/XlogicX/irriFLATE/blob/main/code16.png?raw=true)
