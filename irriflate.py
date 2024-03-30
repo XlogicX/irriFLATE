@@ -67,8 +67,10 @@ class databuffer:
 				ordval += bits[(i*8)+j] << (7-j)
 			hexstring += '{:02x}'.format(ordval)
 		if args.colors: print('\033[0;37m',end='')
-		if end:
+		if end == 'noend':
 			print(hexstring)
+			return(hexstring)
+		elif end == 'file':	# Don't print to STDOUT
 			return(hexstring)
 		else:
 			print(hexstring,end='')
@@ -118,10 +120,10 @@ class nonprefix:
 
 		# Step 3: Assign numerical values to all codes, using consecutive values for all codes of the same length with the base
 		# 	values determined at step 2. Codes that are never used (which have a bit length of zero) must not be assigned a value.
-		tree = [0 for i in range(len(self.alphabet))]
-		for n in range(len(self.alphabet)):
-			length = self.bitlengths[n]
-			if length != 0:
+		tree = ['' for i in range(len(self.alphabet))]  # Initialize tree with all 0's
+		for n in range(len(self.alphabet)):		# For each item in the alphabet
+			length = self.bitlengths[n]				# not the bitlength
+			if length != 0:							# if it's not zero
 				tree[n] = next_code[length]
 				next_code[length] += 1
 
@@ -606,7 +608,7 @@ def getcounts(data):
 	lit = int(hlit)
 	hlit = int_to_binarray(int(hlit)-257,5)
 	subdata.append([hlit])
-	blocks.print(subdata,True)
+	blocks.print(subdata,'noend')
 
 	if args.colors: print('\033[0;31m',end='')	# Red
 	subdata = list(data)
@@ -618,7 +620,7 @@ def getcounts(data):
 	dist = int(hdist)
 	hdist = int_to_binarray(int(hdist)-1,5)
 	subdata.append([hlit,hdist])
-	blocks.print(subdata,True)
+	blocks.print(subdata,'noend')
 
 	if args.colors: print('\033[0;31m',end='')	# Red
 	hclen = '0'
@@ -668,7 +670,7 @@ def getcodealphabet(entries,data):
 			left -= 256 >> number
 
 		subdata.append(bincodes)
-		blocks.print(subdata,True)
+		blocks.print(subdata,'noend')
 
 	if left > 0 and not args.errors:
 		print("You didn't use ALL of the points, this would make the table 'incomplete.' You had {} points left".format(left))
@@ -757,7 +759,7 @@ def getdatalengths(lit,dist,codehuff,data):
 			quit()
 
 		subdata.append(bincodes)
-		blocks.print(subdata,True)
+		blocks.print(subdata,'noend')
 
 	# lit+1 means the first dist code, it is okay to be incomplete for this one. You should pick bitlen of 1,
 	# 	but picking a larger length gets accepted as well
@@ -978,7 +980,7 @@ def print_binarray(bins):
 		for bit in byte:
 			bits += str(bit)
 		hexstring += hex(int(bits, 2))[2:4].zfill(2)
-	print(hexstring,end='')
+	return(hexstring)
 
 #-------------------#
 # Compression Types #
@@ -989,12 +991,12 @@ def stored(last,ftype,data):
 	data.append(last)
 	data.append(ftype)
 	data.append(pad)
-	blocks.print(data,True)
+	blocks.print(data,'noend')
 	if args.colors: print('\033[0;31m',end='')	# Red
 	length,nlength,lbytes = getlengths()	# Get how many bytes (in all formats)
 	data.append(length)
 	data.append(nlength)
-	blocks.print(data,True)
+	blocks.print(data,'noend')
 	literals = []
 	for i in range(lbytes):				# Get user supplied amount of literals
 		if args.colors: print('\033[0;34m',end='')	# Blue
@@ -1002,7 +1004,7 @@ def stored(last,ftype,data):
 		lit = getlit(i)							# Get one literal
 		literals.append(lit)					# And append it
 		subdata.append(literals)			# Append the temporary state
-		blocks.print(subdata,True)				# 	and print it for now
+		blocks.print(subdata,'noend')				# 	and print it for now
 		glen.grow(1)
 	data.append(literals)
 	return(data)
@@ -1010,7 +1012,7 @@ def stored(last,ftype,data):
 def fixed(last,ftype,data):
 	data.append(last)
 	data.append(ftype)
-	blocks.print(data,True)
+	blocks.print(data,'noend')
 	# Get token and see if valid (format), then convert to appropriate int or l,d
 	symbol = 0
 	sym_data = []
@@ -1035,7 +1037,7 @@ def fixed(last,ftype,data):
 			sym_data.append(bits)
 
 		subdata.append(sym_data)			# Append the temporary state
-		blocks.print(subdata,True)				# 	and print it for now
+		blocks.print(subdata,'noend')				# 	and print it for now
 
 	data.append(sym_data)
 	return(data)
@@ -1043,10 +1045,10 @@ def fixed(last,ftype,data):
 def dynamic(last,ftype,data):
 	data.append(last)
 	data.append(ftype)
-	blocks.print(data,True)
+	blocks.print(data,'noend')
 	count,lit,dist,clen,data = getcounts(data)
 	data.append(count)
-	blocks.print(data,True)
+	blocks.print(data,'noend')
 	codehuff, codes, data = getcodealphabet(clen,data)
 	data.append(codes)	
 	datahuff, disthuff, lengths,data = getdatalengths(lit,dist,codehuff,data)
@@ -1068,7 +1070,7 @@ def dynamic(last,ftype,data):
 		else:
 			sym_data.append(bits)
 		subdata.append(sym_data)			# Append the temporary state
-		blocks.print(subdata,True)				# 	and print it for now
+		blocks.print(subdata,'noend')				# 	and print it for now
 
 	data.append(sym_data)
 
@@ -1086,6 +1088,7 @@ parser.add_argument('--gzip', help='Add gzip header nonsense', action="store_tru
 parser.add_argument('--png', help='Craft a fucked up image', action="store_true")
 parser.add_argument('--file', help='An uncompressed version of the data provided for AdlerCRC32 calculation', type=str)
 parser.add_argument('--recipe', help='Recipe of instructions in non-interactive fassion...irrFlate?', type=str)
+parser.add_argument('--output', help='Outputs the data as a file (instead of ASCIIHex to STDOUT)', type=str)
 args = parser.parse_args()
 
 blocks = databuffer()
@@ -1209,16 +1212,39 @@ if args.gzip:
 if args.png:
 	crc = adler32sum()
 
-print("\nFinal Result:")
-datastream = blocks.print(data,False)
+if args.output:
+	datastream = blocks.print(data,'file')
+	with open (args.output, "wb") as outfile:
+		outfile.write(binascii.unhexlify(datastream))
+else:
+	print("\nFinal Result:")
+	datastream = blocks.print(data,False)
 
-if args.gzip: print(crc + glen.gethexr())
+if args.gzip: 
+	if args.output:
+		with open (args.output, "ab") as outfile:
+			outfile.write(binascii.unhexlify(crc + glen.gethexr()))
+	else:
+		print(crc + glen.gethexr())
+
+
 if args.png:
-	print(crc,end='')
+	if args.output:
+		with open (args.output, "ab") as outfile:
+			outfile.write(binascii.unhexlify(crc))
+	else:
+		print(crc,end='')
+
 	lastcheck = [binascii.a2b_hex(datastream[74:] + crc)[i:i+1] for i in range(len(binascii.a2b_hex(datastream[74:] + crc)))]
 	lastcheckarray = []
 	for char in lastcheck:
 		lastcheckarray.append(int_to_binarray(ord(char),8))
 	idatcrc1, idatcrc2, idatcrc3, idatcrc4 = crc32sum(lastcheckarray)
-	print_binarray([idatcrc1, idatcrc2, idatcrc3, idatcrc4])
-	print('0000000049454e44ae426082') # IEND: 0 length + IEND + Known CRC
+
+	if args.output:
+		with open (args.output, "ab") as outfile:
+			outfile.write(binascii.unhexlify(print_binarray([idatcrc1, idatcrc2, idatcrc3, idatcrc4])))
+			outfile.write(binascii.unhexlify('0000000049454e44ae426082'))
+	else:
+		print(print_binarray([idatcrc1, idatcrc2, idatcrc3, idatcrc4]),end='')
+		print('0000000049454e44ae426082') # IEND: 0 length + IEND + Known CRC
